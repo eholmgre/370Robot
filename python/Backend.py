@@ -7,14 +7,15 @@ class Backend(threading.Thread):
 
     class Receiver(threading.Thread):
 
-        def __init__(self, connection, rDeque, rLock):
+        def __init__(self, connection, rDeque, rLock, runflag):
             self._con = connection
             self._queue = rDeque
             self._queueLock = rLock
+            self.running = runflag
             threading.Thread.__init__(self)
 
         def run(self):
-            while True:
+            while self.running:
                 line = self._con.readline()
                 self._queueLock.aquire()
                 self._queue.append(line)
@@ -29,7 +30,9 @@ class Backend(threading.Thread):
         # transmit queue: shared btwn Frontend and Backend, holds commands to be sent to arduino
         self.tx = deque()
         self.tLock = threading.Lock()
-        self.receive = self.Receiver(self._con, self.rx, self.rLock)
+
+        self._running = True
+        self.receive = self.Receiver(self._con, self.rx, self.rLock, self._running)
         threading.Thread.__init__(self)
 
     def run(self):
@@ -44,7 +47,9 @@ class Backend(threading.Thread):
             if self.tx[-1] is not None:
                 cmd = self.tx.pop()
                 if cmd == "q":
-                    self.tLock.release
+                    self.tLock.release()
+                    self.receive.running = False
+                    self.Receiver.join()
                     break
-                self._con.write(b"{} {}".format(cmd[0], cmd[1]))
+                self._con.write(bytes("{} {}".format(cmd[0], cmd[1])))
             self.tLock.release()
