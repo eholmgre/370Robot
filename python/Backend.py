@@ -1,82 +1,50 @@
 import threading
 import serial
+from collections import deque
 
 
 class Backend(threading.Thread):
-    class receive(threading.Thread):
 
-        def __init__(connecion):
-            # ohh whee
+    class Receiver(threading.Thread):
+
+        def __init__(self, connection, rDeque, rLock):
             self._con = connection
+            self._queue = rDeque
+            self._queueLock = rLock
+            threading.Thread.__init__(self)
 
-        def start():
-            # get stuff
+        def run(self):
             while True:
-                line = _con.readline();
+                line = self._con.readline()
+                self._queueLock.aquire()
+                self._queue.append(line)
+                self._queueLock.release()
 
-    ## receive
 
-    def __init__(device):
+    def __init__(self, device):
         self._con = serial.Serial(device, 9600)
+        # receive queue: shared btwn Backend and Receiver, holds serial data from arduino
+        self.rx = deque()
+        self.rLock = threading.Lock()
+        # transmit queue: shared btwn Frontend and Backend, holds commands to be sent to arduino
+        self.tx = deque()
+        self.tLock = threading.Lock()
+        self.receive = self.Receiver(self._con, self.rx, self.rLock)
+        threading.Thread.__init__(self)
 
-    def start():
-        # get mode from front
-
-        if mode == m:
-            manual()
-        elif mode == ma:
-            asistman()
-        elif mode == a:
-            auto();
-        else:
-            pass
-            # retry mode from front
-
-    def manual():
-
+    def run(self):
+        self.receive.start()
         while True:
-            line = input()
+            self.rLock.aquire()
+            if self.rx[-1] is not None:
+                print(self.rx.pop())
+            self.rLock.release()
 
-            if line == 'f':
-                con.write(b'50 50')
-            elif line == 'ff':
-                con.write(b'100 100')
-            elif line == 'fs':
-                con.write(b'10 10')
-            elif line == 'fr':
-                con.write(b'100 30')
-            elif line == 'fl':
-                con.write(b'30 100')
-            elif line == 'b':
-                con.write(b'-50 -50')
-            elif line == 'bb':
-                con.write(b'-100 -100')
-            elif line == 'br':
-                con.write(b'-100 -30')
-            elif line == 'bl':
-                con.write(b'-30 -100')
-            elif line == 'bs':
-                con.write(b'-10 -10')
-            elif line == 'r':
-                con.write(b'50 -50')
-            elif line == 'rr':
-                con.write(b'100 -100')
-            elif line == 'rs':
-                con.write(b'10 -10')
-            elif line == 'l':
-                con.write(b'-50 50')
-            elif line == 'll':
-                con.write(b'-100 100')
-            elif line == 'ls':
-                con.write(b'-10 10')
-            elif line == 's':
-                con.write(b'0 0')
-            elif line == 'exit':
-                con.write(b'0 0')
-                continue
-            else:
-                print('unknown cmd')
-                con.write(b'0 0')
-                ## manual
-
-## Backend
+            self.tLock.aquire()
+            if self.tx[-1] is not None:
+                cmd = self.tx.pop()
+                if cmd == "q":
+                    self.tLock.release
+                    break
+                self._con.write(b"{} {}".format(cmd[0], cmd[1]))
+            self.tLock.release()
