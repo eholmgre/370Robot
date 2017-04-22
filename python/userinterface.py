@@ -6,6 +6,8 @@ import termios
 import atexit
 from collections import defaultdict
 
+import backend
+
 def exit_handler(os):
     termios.tcsetattr(sys.stdin, termios.TCSADRAIN, os)
     print("\nProgram Terminated!")
@@ -14,6 +16,9 @@ def exit_handler(os):
 def main():
     orig_settings = termios.tcgetattr(sys.stdin)
     atexit.register(exit_handler, orig_settings)
+
+    bk = backend.Backend('/dev/ttyAMA0')
+    bk.start()
 
     ui = UserInput(orig_settings)
     ui.start()
@@ -95,7 +100,7 @@ class UserInput:
                         'q': self.quit,
                         'e': self.stop}
 
-        self.options = defaultdict(lambda: self.invalid)
+        self.options = defaultdict(lambda: self.invalid, self.options)
 
         tty.setraw(sys.stdin)
 
