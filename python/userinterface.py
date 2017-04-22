@@ -20,7 +20,7 @@ def main():
     orig_settings = termios.tcgetattr(sys.stdin)
     atexit.register(exit_handler, orig_settings)
 
-    bk = backend.Backend('/dev/ttyACM0')
+    bk = backend.Backend('/dev/ttyAMA0')
     bk.start()
 
     ui = UserInput(orig_settings, bk)
