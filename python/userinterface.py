@@ -8,8 +8,8 @@ import threading
 from collections import defaultdict
 from collections import deque
 
-
 import backend
+
 
 def exit_handler(os):
     termios.tcsetattr(sys.stdin, termios.TCSADRAIN, os)
@@ -18,58 +18,65 @@ def exit_handler(os):
 
 def main():
     orig_settings = termios.tcgetattr(sys.stdin)
-	atexit.register(exit_handler, orig_settings)
-	
-	bk = backend.Backend('/dev/ttyAMA0')
-	bk.start()
+    atexit.register(exit_handler, orig_settings)
 
-	ui = UserInput(orig_settings,bk)
-	ui.start()
+    bk = backend.Backend('/dev/ttyAMA0')
+    bk.start()
 
-	bk.join()
+    ui = UserInput(orig_settings, bk)
+    ui.start()
+
+    #bk.join()
 
 
 class UserInput:
-    def __init__(self, os,backend):
+    def __init__(self, os, backend):
         self.key = 0
         self.right = 0
         self.left = 0
         self.orig_settings = os
-		self.bk = backend
+        self.bk = backend
 
 
     def forward(self):
         if (self.left != self.right):
             self.right = self.left = max(self.left, self.right)
-        self.right += 10
-        self.left += 10
+            self.right += 10
+            self.left += 10
+
 
     def back(self):
         if (self.left != self.right):
             self.right = self.left = min(self.left, self.right)
-        self.right -= 10
-        self.left -= 10
+            self.right -= 10
+            self.left -= 10
+
 
     def goLeft(self):
         self.left -= 10
         self.right += 10
 
+
     def goRight(self):
         self.right -= 10
         self.left += 10
+
 
     def stop(self):
         self.right = 0
         self.left = 0
 
+
     def quit(self):
         self.left = 0
         self.right = 0
-		self.bk.tx.append("q")
+        self.bk.tx.append("q")
         sys.exit()
+
 
     def invalid(self):
         pass
+
 
     def validate(self):
         if self.left > 100:
@@ -81,6 +88,7 @@ class UserInput:
             self.right = 100
         elif self.right < -100:
             self.right = -100
+
 
     def printData(self, key):
         termios.tcsetattr(sys.stdin, termios.TCSADRAIN, self.orig_settings)
@@ -98,10 +106,11 @@ class UserInput:
         print("------- Status -------")
         print("Left: ", self.left, " Right: ", self.right)
 
-	def queueInsert():
-		self.bk.tLock.aquire()
-		self.bk.tx.append((self.left,self.right))
-		self.bk.tLock.release()
+    def queueInsert(self):
+        self.bk.tLock.aquire()
+        self.bk.tx.append((self.left, self.right))
+        self.bk.tLock.release()
+
 
     def start(self):
         self.printData(self.key)
