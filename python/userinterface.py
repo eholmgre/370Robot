@@ -107,7 +107,7 @@ class UserInput:
         print("Left: ", self.left, " Right: ", self.right)
 
     def queueInsert(self):
-        self.bk.tLock.aquire()
+        self.bk.tLock.acquire()
         self.bk.tx.append((self.left, self.right))
         self.bk.tLock.release()
 

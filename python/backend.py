@@ -17,7 +17,7 @@ class Backend(threading.Thread):
         def run(self):
             while self.running:
                 line = self._con.readline()
-                self._queueLock.aquire()
+                self._queueLock.acquire()
                 self._queue.append(line)
                 self._queueLock.release()
 
@@ -38,12 +38,12 @@ class Backend(threading.Thread):
     def run(self):
         self.receive.start()
         while True:
-            self.rLock.aquire()
+            self.rLock.acquire()
             if self.rx[-1] is not None:
                 print(self.rx.pop())
             self.rLock.release()
 
-            self.tLock.aquire()
+            self.tLock.acquire()
             if self.tx[-1] is not None:
                 cmd = self.tx.pop()
                 if cmd == "q":
