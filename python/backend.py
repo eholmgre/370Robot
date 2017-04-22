@@ -39,17 +39,18 @@ class Backend(threading.Thread):
         self.receive.start()
         while True:
             self.rLock.acquire()
-            if self.rx[-1] is not None:
+            if self.rx:
                 print(self.rx.pop())
             self.rLock.release()
 
             self.tLock.acquire()
-            if self.tx[-1] is not None:
-                cmd = self.tx.pop()
+            if self.tx:
+                print(self.tx)
+                cmd = self.tx.popleft()
                 if cmd == "q":
                     self.tLock.release()
                     self.receive.running = False
-                    self.Receiver.join()
+                    self.receive.join()
                     break
-                self._con.write(bytes("{} {}".format(cmd[0], cmd[1])))
+                self._con.write(bytes("{} {}".format(cmd[0], cmd[1]), 'utf-8'))
             self.tLock.release()

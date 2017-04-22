@@ -20,13 +20,11 @@ def main():
     orig_settings = termios.tcgetattr(sys.stdin)
     atexit.register(exit_handler, orig_settings)
 
-    bk = backend.Backend('/dev/ttyAMA0')
+    bk = backend.Backend('/dev/ttyACM0')
     bk.start()
 
     ui = UserInput(orig_settings, bk)
     ui.start()
-
-    #bk.join()
 
 
 class UserInput:
@@ -37,19 +35,23 @@ class UserInput:
         self.orig_settings = os
         self.bk = backend
 
+    def queueInsert(self):
+        self.bk.tLock.acquire()
+        self.bk.tx.append((self.left, self.right))
+        self.bk.tLock.release()
 
     def forward(self):
         if (self.left != self.right):
             self.right = self.left = max(self.left, self.right)
-            self.right += 10
-            self.left += 10
+        self.right += 10
+        self.left += 10
 
 
     def back(self):
         if (self.left != self.right):
             self.right = self.left = min(self.left, self.right)
-            self.right -= 10
-            self.left -= 10
+        self.right -= 10
+        self.left -= 10
 
 
     def goLeft(self):
@@ -70,9 +72,9 @@ class UserInput:
     def quit(self):
         self.left = 0
         self.right = 0
+        self.queueInsert()
         self.bk.tx.append("q")
-        sys.exit()
-
+        self.bk.join()
 
     def invalid(self):
         pass
@@ -106,11 +108,6 @@ class UserInput:
         print("------- Status -------")
         print("Left: ", self.left, " Right: ", self.right)
 
-    def queueInsert(self):
-        self.bk.tLock.acquire()
-        self.bk.tx.append((self.left, self.right))
-        self.bk.tLock.release()
-
 
     def start(self):
         self.printData(self.key)
@@ -126,13 +123,13 @@ class UserInput:
 
         tty.setraw(sys.stdin)
 
-        while self.key != chr(3):  # q to exit
-
+        while self.key != chr(113):  # q to exit
             self.printData(self.key)
             tty.setraw(sys.stdin)
             self.key = sys.stdin.read(1)[0]
             self.options[self.key]()
             self.validate()
+            self.queueInsert()
 
 
 if __name__ == '__main__':
