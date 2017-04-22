@@ -4,7 +4,10 @@ import tty
 import sys
 import termios
 import atexit
+import threading
 from collections import defaultdict
+from collections import deque
+
 
 import backend
 
@@ -15,21 +18,25 @@ def exit_handler(os):
 
 def main():
     orig_settings = termios.tcgetattr(sys.stdin)
-    atexit.register(exit_handler, orig_settings)
+	atexit.register(exit_handler, orig_settings)
+	
+	bk = backend.Backend('/dev/ttyAMA0')
+	bk.start()
 
-    bk = backend.Backend('/dev/ttyAMA0')
-    bk.start()
+	ui = UserInput(orig_settings,bk)
+	ui.start()
 
-    ui = UserInput(orig_settings)
-    ui.start()
+	bk.join()
 
 
 class UserInput:
-    def __init__(self, os):
+    def __init__(self, os,backend):
         self.key = 0
         self.right = 0
         self.left = 0
         self.orig_settings = os
+		self.bk = backend
+
 
     def forward(self):
         if (self.left != self.right):
@@ -58,6 +65,7 @@ class UserInput:
     def quit(self):
         self.left = 0
         self.right = 0
+		self.bk.tx.append("q")
         sys.exit()
 
     def invalid(self):
@@ -89,6 +97,11 @@ class UserInput:
         print("")
         print("------- Status -------")
         print("Left: ", self.left, " Right: ", self.right)
+
+	def queueInsert():
+		self.bk.tLock.aquire()
+		self.bk.tx.append((self.left,self.right))
+		self.bk.tLock.release()
 
     def start(self):
         self.printData(self.key)
