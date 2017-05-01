@@ -18,7 +18,7 @@ def exit_handler(os):
 #UI class inhertits from thread so that program does
 #not busy wait for UI
 class UserInput(threading.Thread):
-    def __init__(self):#, backend):
+    def __init__(self, bknd):
         #Get original terimal seting so they can be
         #reset at close
         self.orig_settings = termios.tcgetattr(sys.stdin)
@@ -32,7 +32,7 @@ class UserInput(threading.Thread):
         self.left = 0
         #reference to back end class
         #back end has queues for read/write to arduino
-        self.bk = backend.Backend('/dev/ttyAMA0')
+        self.bk = bknd
         #If automated mode is true all user input accept r
         #with be ignored
         self.automated = False
@@ -77,7 +77,6 @@ class UserInput(threading.Thread):
         self.right = 0
         self.queueInsert()
         self.bk.tx.append("q")
-        self.bk.join()
         self.running = False
 
     def invalid(self):
@@ -86,7 +85,7 @@ class UserInput(threading.Thread):
     def roam(self):
         self.stop()
         self.roam = True
-        print("ROAMING");
+        print("ROAMING")
 
     def validate(self):
         if(self.left > 100):
