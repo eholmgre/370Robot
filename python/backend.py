@@ -42,7 +42,7 @@ class Backend(threading.Thread):
             self.rLock.acquire()
             if self.rx:
                 data = self.rx.popleft()
-                print(data)
+                data = data.split()
                 self.UI.current = data[0]
                 self.UI.distance = data[1]
                 self.UI.angle = data[2]
