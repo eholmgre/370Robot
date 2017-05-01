@@ -15,13 +15,8 @@ def main():
     bk.start()
     userInterface.start()
 
-    while(userInterface.running):
-        userInterface.printData()
-        time.sleep(1)
-
     userInterface.join()
     bk.join()
-    # ui terminates backend, so makes sense for it to join
 
 if __name__ == '__main__':
     main()

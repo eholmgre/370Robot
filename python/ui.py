@@ -18,7 +18,7 @@ def exit_handler(os):
 #UI class inhertits from thread so that program does
 #not busy wait for UI
 class UserInput(threading.Thread):
-    def __init__(self, bkndQueue, bkndLock):
+    def __init__(self, bkQueue, bkLock):
         #Get original terimal seting so they can be
         #reset at close
         self.orig_settings = termios.tcgetattr(sys.stdin)
@@ -41,9 +41,9 @@ class UserInput(threading.Thread):
         #Lock so that dataPrinting access is synchronized
         self.lock = threading.Lock()
         #Backend Queue Lock
-        self.bkndLock = bkndLock
+        self.bkndLock = bkLock
         #Backend Queue reference
-        self.bkndQueue = bkndQueue
+        self.bkndQueue = bkQueue
 
 
         threading.Thread.__init__(self)
