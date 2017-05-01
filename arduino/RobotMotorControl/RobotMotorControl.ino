@@ -1,6 +1,6 @@
 /*
  * Motor Controller Driver
- * version 0.6
+ * version 1.3
  * Author: Erik Holmgren <eholmgre@rams.colostate.edu>
  * Date 2017-04-16
  */
