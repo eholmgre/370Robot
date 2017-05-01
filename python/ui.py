@@ -32,7 +32,7 @@ class UserInput(threading.Thread):
         self.left = 0
         #reference to back end class
         #back end has queues for read/write to arduino
-        self.bk = backend.Backend('/dev/ttyAMA0', 9600)
+        self.bk = backend.Backend('/dev/ttyAMA0')
         #If automated mode is true all user input accept r
         #with be ignored
         self.automated = False
