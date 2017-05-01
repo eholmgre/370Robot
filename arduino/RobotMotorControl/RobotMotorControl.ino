@@ -1,6 +1,6 @@
 /*
  * Motor Controller Driver
- * version 1.3
+ * version 1.5
  * Author: Erik Holmgren <eholmgre@rams.colostate.edu>
  * Date 2017-04-16
  */
@@ -83,9 +83,9 @@ void setup() {
 
 void loop() {
 
-  double cur = (analogRead(CURPIN) - 514) / 10.0; // might be acurate, might not
-  if (abs(cur - maxCur) > .5) // re measure if we get a spike
-    cur = cur = (analogRead(CURPIN) - 514) / 10.0;
+  double cur = (analogRead(CURPIN) - 514) / 100.0; // might be accurate, might not
+  if (abs(cur - maxCur) > .5) // remeasure if we get a spike
+    cur = cur = (analogRead(CURPIN) - 514) / 100.0;
 
   if (cur > maxCur)
     maxCur = cur;
