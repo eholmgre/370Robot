@@ -18,7 +18,7 @@ def exit_handler(os):
 #UI class inhertits from thread so that program does
 #not busy wait for UI
 class UserInput(threading.Thread):
-    def __init__(self, bknd):
+    def __init__(self, bkndQueue, bkndLock):
         #Get original terimal seting so they can be
         #reset at close
         self.orig_settings = termios.tcgetattr(sys.stdin)
@@ -30,23 +30,29 @@ class UserInput(threading.Thread):
         self.right = 0
         #current left speed (-100, 100)
         self.left = 0
-        #reference to back end class
-        #back end has queues for read/write to arduino
-        self.bk = bknd
-        #If automated mode is true all user input accept r
-        #with be ignored
-        self.automated = False
-        self.running = True
+        #most recent current from the arduino
+        self.current = 0
+        #angle of senor
+        self.angle = 0
+        #distance seen by sensor
+        self.distance = 0
+        #boolean whether sensor is turning
+        self.turning = 0
         #Lock so that dataPrinting access is synchronized
         self.lock = threading.Lock()
-        
+        #Backend Queue Lock
+        self.bkndLock = bkndLock
+        #Backend Queue reference
+        self.bkndQueue = bkndQueue
+
+
         threading.Thread.__init__(self)
 
     #Syncronized queue insertion
     def queueInsert(self):
-        self.bk.tLock.acquire()
-        self.bk.tx.append((self.left, self.right))
-        self.bk.tLock.release()
+        self.bkndLock.acquire()
+        self.bkndQueue.append((self.left, self.right, self.turning))
+        self.bkndLock.release()
 
     def forward(self):
         if (self.left != self.right):
@@ -83,9 +89,10 @@ class UserInput(threading.Thread):
         pass
 
     def roam(self):
-        self.stop()
-        self.roam = True
-        print("ROAMING")
+        if self.turn:
+            self.turn = 0
+        else:
+            self.turn = 1
 
     def validate(self):
         if(self.left > 100):
@@ -112,31 +119,15 @@ class UserInput(threading.Thread):
         print("d: Turn Righ")
         print("e: Stop")
         print("q: Quit")
-        print("r: Roaming Mode")
+        print("R: Toggle Sensor Turing")
         print("")
         print("------- Status -------")
-        print("Left: ", self.left, " Right: ", self.right)
+        print("Senor Turning(0/1): ", self.turning, "Left: ", self.left, " Right: ", self.right)
         
-        #Check for indexing errors?
-        data = self.getSenorData()
-        
-        #print("Curent: ",0," Senor Angle: ",0," Distance: ",0)
-        if data:
-            print("Curent: ",data[0]," Distance: ",data[1]," Angle: ",data[2])
-        else:
-            print("")
+        print("Curent: ",self.current," Distance: ",self.distance," Angle: ",self.angle)
         #Set terminal back to raw mode so that single char is grabbed
         tty.setraw(sys.stdin)
         self.lock.release()
-
-    def getSenorData(self):
-        self.bk.rLock.acquire()
-        if self.bk.rx:
-            data = self.bk.rx.popleft()
-        else:
-            data = ['unknown', 'unknown', 'unknown']
-        self.bk.rLock.release()
-        return data
 
     def run(self):
         self.options = {'w': self.forward,
