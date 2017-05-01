@@ -43,16 +43,15 @@ class Backend(threading.Thread):
             if self.rx:
                 data = self.rx.popleft()
                 data = data.split()
-                self.UI.current = data[0]
-                self.UI.distance = data[1]
-                self.UI.angle = data[2]
+                self.UI.current = float(data[0])
+                self.UI.distance = int(data[1])
+                self.UI.angle = int(data[2])
             self.rLock.release()
             #self.UI.printData()
 
             self.tLock.acquire()
             if self.tx:
                 cmd = self.tx.popleft()
-                print(cmd)
                 if cmd == "q":
                     self.tLock.release()
                     self.receive.running = False

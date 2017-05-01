@@ -49,7 +49,7 @@ class UserInput(threading.Thread):
     #Syncronized queue insertion
     def queueInsert(self):
         self.bkndLock.acquire()
-        self.bkndQueue.append((self.left, self.right, self.turning))
+        self.bkndQueue.append((self.left, self.right, int(self.turning)))
         self.bkndLock.release()
 
     def forward(self):
