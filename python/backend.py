@@ -38,11 +38,6 @@ class Backend(threading.Thread):
     def run(self):
         self.receive.start()
         while True:
-            self.rLock.acquire()
-            if self.rx:
-                print(self.rx.pop())
-            self.rLock.release()
-
             self.tLock.acquire()
             if self.tx:
                 print(self.tx)

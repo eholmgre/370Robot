@@ -122,15 +122,20 @@ class UserInput(threading.Thread):
         data = self.getSenorData()
         
         #print("Curent: ",0," Senor Angle: ",0," Distance: ",0)
-        print("Curent: ",data[0]," Distance: ",data[1]," Angle: ",data[2])
-        
+        if data:
+            print("Curent: ",data[0]," Distance: ",data[1]," Angle: ",data[2])
+        else:
+            print("")
         #Set terminal back to raw mode so that single char is grabbed
         tty.setraw(sys.stdin)
         self.lock.release()
 
     def getSenorData(self):
         self.bk.rLock.acquire()
-        data = self.bk.rx.popleft()
+        if self.bk.rx:
+            data = self.bk.rx.popleft()
+        else:
+            data = ['unknown', 'unknown', 'unknown']
         self.bk.rLock.release()
         return data
 
