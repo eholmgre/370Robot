@@ -82,17 +82,16 @@ class UserInput(threading.Thread):
         self.left = 0
         self.right = 0
         self.queueInsert()
-        self.bk.tx.append("q")
+        self.bkndLock.acquire()
+        self.bkndQueue.append("q")
+        self.bkndLock.release()
         self.running = False
 
     def invalid(self):
         pass
 
     def roam(self):
-        if self.turn:
-            self.turn = 0
-        else:
-            self.turn = 1
+        self.turning = not self.turning
 
     def validate(self):
         if(self.left > 100):

@@ -7,10 +7,12 @@ import time
 def main():
 
     bk = backend.Backend('/dev/ttyAMA0')
-    bk.start()
 
-    userInterface = ui.UserInput(bk)
-    #userInterface = ui.UserInput()
+
+    userInterface = ui.UserInput(bk.tx, bk.tLock)
+    bk.UI = userInterface
+
+    bk.start()
     userInterface.start()
 
     while(userInterface.running):
@@ -18,7 +20,7 @@ def main():
         time.sleep(1)
 
     userInterface.join()
-    backend.join()
+    bk.join()
     # ui terminates backend, so makes sense for it to join
 
 if __name__ == '__main__':

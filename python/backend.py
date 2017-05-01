@@ -25,6 +25,7 @@ class Backend(threading.Thread):
     def __init__(self, device):
         self._con = serial.Serial(device, 9600)
         # receive queue: shared btwn Backend and Receiver, holds serial data from arduino
+        self.UI = None
         self.rx = deque()
         self.rLock = threading.Lock()
         # transmit queue: shared btwn Frontend and Backend, holds commands to be sent to arduino
@@ -38,6 +39,14 @@ class Backend(threading.Thread):
     def run(self):
         self.receive.start()
         while True:
+            self.rLock.acquire()
+            if self.rx:
+                data = self.rx.popleft()
+                self.UI.current = data[0]
+                self.UI.distance = data[1]
+                self.UI.angle = data[2]
+                self.UI.printData()
+
             self.tLock.acquire()
             if self.tx:
                 print(self.tx)
