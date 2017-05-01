@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 import ui
 import backend
-import time
 
 
 def main():

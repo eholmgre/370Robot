@@ -4,10 +4,8 @@ import sys
 import termios
 import atexit
 import threading
-import backend
 
 from collections import defaultdict
-from collections import deque
 
 #Ensures that termios resets terminal settings any time the program exits
 #os = original terminal settings stored at launch
@@ -118,10 +116,10 @@ class UserInput(threading.Thread):
         print("d: Turn Righ")
         print("e: Stop")
         print("q: Quit")
-        print("R: Toggle Sensor Turing")
+        print("r: Toggle Sensor Turing")
         print("")
         print("------- Status -------")
-        print("Senor Turning(0/1): ", self.turning, "Left: ", self.left, " Right: ", self.right)
+        print("Senor Turning: ", self.turning, "\nLeft: ", self.left, " Right: ", self.right)
         
         print("Curent: ",self.current," Distance: ",self.distance," Angle: ",self.angle)
         #Set terminal back to raw mode so that single char is grabbed
