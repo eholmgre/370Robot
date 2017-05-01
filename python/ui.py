@@ -119,16 +119,16 @@ class UserInput(threading.Thread):
         print("Left: ", self.left, " Right: ", self.right)
         
         #Check for indexing errors?
-        data = getSenorData()
+        data = self.getSenorData()
         
         #print("Curent: ",0," Senor Angle: ",0," Distance: ",0)
-        print("Curent: ",data[0]," Senor Angle: ",data[1]," Distance: ",data[2])
+        print("Curent: ",data[0]," Distance: ",data[1]," Angle: ",data[2])
         
         #Set terminal back to raw mode so that single char is grabbed
         tty.setraw(sys.stdin)
         self.lock.release()
 
-    def getSenorData():
+    def getSenorData(self):
         self.bk.rLock.acquire()
         data = self.bk.rx.popleft()
         self.bk.rLock.release()
