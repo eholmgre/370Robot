@@ -96,7 +96,7 @@ void loop() {
 
     ping_dist = getPing();
 
-      if (sweep) {
+    if (sweep) {
     
       if (servo_angle <= 45 || servo_angle >= 135)
         servo_direction = !servo_direction;
@@ -104,6 +104,8 @@ void loop() {
       servo_angle = (servo_direction) ? servo_angle - SERVOINC : servo_angle + SERVOINC;
 
       ping_servo.write(servo_angle);
+    } else {
+      ping_servo.write(90);
     }
 
     Serial.print(maxCur); Serial.print(' '); Serial.print(ping_dist); Serial.print(' '); Serial.println(ping_angle - 90);

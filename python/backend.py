@@ -46,8 +46,8 @@ class Backend(threading.Thread):
                 self.UI.current = float(data[0])
                 self.UI.distance = int(data[1])
                 self.UI.angle = int(data[2])
+                self.UI.printData()
             self.rLock.release()
-            #self.UI.printData()
 
             self.tLock.acquire()
             if self.tx:
