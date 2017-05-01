@@ -1,11 +1,14 @@
 /*
  * Motor Controller Driver
- * version 0.6
+ * version 1.3
  * Author: Erik Holmgren <eholmgre@rams.colostate.edu>
  * Date 2017-04-16
  */
 
+#include <Servo.h>
+
 void updateSpeed(int left, int right);
+long getPing();
 
 // Pins for front-left motor
 const int MOTOR1PWM = 2; 
@@ -27,6 +30,11 @@ const int MOTOR4PWM = 4;
 const int MOTOR4FWD = 26;
 const int MOTOR4RWD = 27;
 
+// Pins for sensors and servo
+const int SERVOPWM = 9;
+const int CURPIN = 0;
+const int PINGTRIG = 7;
+const int PINGECHO = 8;
 
 // Directions of left and right side motors
 bool lft_fwd = true;
@@ -36,11 +44,22 @@ bool rht_fwd = true;
 uint8_t lft_spd = 0;
 uint8_t rht_spd = 0;
 
+// Values for sensors and servo
+bool sweep = 0;
+const int SERVOINC = 45;
+Servo ping_servo;
+uint8_t servo_angle = 90;
+bool servo_direction = 1;
 double maxCur;
 
 void setup() {
   Serial.begin(9600);
   Serial.setTimeout(10);
+
+  ping_servo.attach(SERVOPWM);
+
+  pinMode(PINGTRIG, OUTPUT);
+  pinMode(PINGECHO, INPUT);
   
   pinMode(MOTOR1PWM, OUTPUT);
   pinMode(MOTOR1FWD, OUTPUT);
@@ -64,14 +83,30 @@ void setup() {
 
 void loop() {
 
-  double cur = (analogRead(0) - 514) / 10.0;
+  double cur = (analogRead(CURPIN) - 514) / 10.0; // might be acurate, might not
+  if (abs(cur - maxCur) > .5) // re measure if we get a spike
+    cur = cur = (analogRead(CURPIN) - 514) / 10.0;
 
   if (cur > maxCur)
     maxCur = cur;
 
-  if (millis() % 500 == 0) { // every half second send current, sonar data, sonar angle, and accelaromater data
-    Serial.print("Current: ");
-    Serial.println(maxCur);
+  if (millis() % 500 == 0) {
+    int ping_dist = -1;
+    int ping_angle = servo_angle;
+
+    ping_dist = getPing();
+
+      if (sweep) {
+    
+      if (servo_angle <= 45 || servo_angle >= 135)
+        servo_direction = !servo_direction;
+    
+      servo_angle = (servo_direction) ? servo_angle - SERVOINC : servo_angle + SERVOINC;
+
+      ping_servo.write(servo_angle);
+    }
+
+    Serial.print(maxCur); Serial.print(' '); Serial.print(ping_dist); Serial.print(' '); Serial.println(ping_angle - 90);
     Serial.flush();
     maxCur = 0;
   }
@@ -79,6 +114,7 @@ void loop() {
   if (Serial.available()) {
     int lft_spd_in = Serial.parseInt();
     int rht_spd_in = Serial.parseInt();
+    sweep = Serial.parseInt();
     Serial.print("Recieved: ");
     Serial.print(lft_spd_in);
     Serial.print(", ");
@@ -88,6 +124,40 @@ void loop() {
     updateSpeed(lft_spd_in, rht_spd_in);
   }
   
+}
+
+int less (const void * a, const void * b)
+{
+  return ( *(int*)a - *(int*)b );
+}
+
+long getPing() {
+  int spread[5];
+  for (int i = 0; i < 5; ++i) {
+      int dist, dur;
+      digitalWrite(PINGTRIG, LOW);
+      delayMicroseconds(2);
+      digitalWrite(PINGTRIG, HIGH);
+      delayMicroseconds(10);
+      digitalWrite(PINGTRIG, LOW);
+      dur = pulseIn(PINGECHO, HIGH, 50000);
+
+      dist = dur / 58.2;
+
+      if (dist == 0 || dist > 200)
+        dist = -1;
+
+        spread[i] = dist;
+  }
+
+  qsort(spread, 5, sizeof(int), less);
+
+  int total = 0;
+
+  for (int i = 1; i < 4; ++i)
+    total += spread[i];
+
+    return (total) ? (total / 3) : -1;
 }
 
 void updateSpeed(int left, int right) {
