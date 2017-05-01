@@ -115,11 +115,6 @@ void loop() {
     int lft_spd_in = Serial.parseInt();
     int rht_spd_in = Serial.parseInt();
     sweep = Serial.parseInt();
-    Serial.print("Recieved: ");
-    Serial.print(lft_spd_in);
-    Serial.print(", ");
-    Serial.println(rht_spd_in);
-    Serial.flush();
 
     updateSpeed(lft_spd_in, rht_spd_in);
   }
